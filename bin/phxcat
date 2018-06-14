@@ -17,11 +17,12 @@ program
   .option('-c, --channel <channel>', 'channel to listen to')
   .parse(process.argv);
 
-if (!program.socket || ~program.channel) {
+if (!program.socket || !program.channel) {
   console.error('\u001b[33merror: must provide --socket\u001b[39m');
   process.exit(-1);
 } if (program.socket) {
   let connectUrl = program.socket;
+  console.log(connectUrl);
   if (!connectUrl.match(/\w+:\/\/.*$/i)) {
     connectUrl = 'ws://' + connectUrl;
   }
@@ -59,7 +60,7 @@ if (!program.socket || ~program.channel) {
       console.error('An error occurred joining channel:' + program.channel);
       socket.disconnect();
       process.exit();
-    );
+    });
 
 } else {
   program.help();
