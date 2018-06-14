@@ -1,0 +1,16 @@
+{
+  "name": "phxcat",
+  "version": "1.0.0",
+  "description": "A utility like wscat for phxchannels",
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "~2.15.0",
+    "phoenix-channels": "^1.0.0",
+    "read": "~1.0.7",
+    "ws": "~5.2.0"
+  },
+  "bin": {
+    "phxcat": "./bin/phxcat"
+  }
+}

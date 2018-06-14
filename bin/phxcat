@@ -1,0 +1,66 @@
+#!/usr/bin/env node
+
+const program = require('commander');
+const repl = require('repl');
+const { Socket } = require('phoenix-channels')
+
+/**
+ * The actual application
+ */
+const version = require('../package.json').version;
+
+program
+  .version(version)
+  .usage('[options] (--listen <port> | --connect <url>)')
+  .option('-l, --listen <port>', 'listen on port')
+  .option('-s, --socket <url>', 'connect to a websocket server')
+  .option('-c, --channel <channel>', 'channel to listen to')
+  .parse(process.argv);
+
+if (!program.socket || ~program.channel) {
+  console.error('\u001b[33merror: must provide --socket\u001b[39m');
+  process.exit(-1);
+} if (program.socket) {
+  let connectUrl = program.socket;
+  if (!connectUrl.match(/\w+:\/\/.*$/i)) {
+    connectUrl = 'ws://' + connectUrl;
+  }
+
+  const socket = new Socket(connectUrl);
+  socket.connect();
+
+  const channel = socket.channel(program.channel);
+  channel.onMessage = function(evt, payload, ref) {
+    if (evt === 'phx_reply' || evt === 'chan_reply_1') {
+      return payload;
+    }
+    console.log(`event: ${evt}`);
+    console.log(`payload: ${JSON.stringify(payload)}\n`)
+    return payload;
+  }
+
+  channel.join()
+    .receive("ok", resp => {
+      console.log(`connected to  (type .exit to quit)`);
+      const replServer = repl.start({
+        prompt: "phxcat> ",
+        useColors: true
+      });
+
+      replServer.context.socket = socket;
+      replServer.context.channel = channel;
+
+      replServer.on('exit', function() {
+        socket.disconnect();
+        process.exit();
+      });
+    })
+    .receive("error", resp => {
+      console.error('An error occurred joining channel:' + program.channel);
+      socket.disconnect();
+      process.exit();
+    );
+
+} else {
+  program.help();
+}
