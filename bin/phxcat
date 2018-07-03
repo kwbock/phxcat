@@ -15,6 +15,7 @@ program
   .option('-l, --listen <port>', 'listen on port')
   .option('-s, --socket <url>', 'connect to a websocket server')
   .option('-c, --channel <channel>', 'channel to listen to')
+  .option('-p, --params <params>', 'params')
   .parse(process.argv);
 
 if (!program.socket || !program.channel) {
@@ -27,7 +28,11 @@ if (!program.socket || !program.channel) {
     connectUrl = 'ws://' + connectUrl;
   }
 
-  const socket = new Socket(connectUrl);
+  let params = {};
+  if (program.params) {
+    params = { params: JSON.parse(program.params) }
+  }
+  const socket = new Socket(connectUrl, params);
   socket.connect();
 
   const channel = socket.channel(program.channel);
@@ -36,7 +41,8 @@ if (!program.socket || !program.channel) {
       return payload;
     }
     console.log(`event: ${evt}`);
-    console.log(`payload: ${JSON.stringify(payload)}\n`)
+    console.log(`payload: ${JSON.stringify(payload)}`)
+    console.log(`ref: ${ref}\n`);
     return payload;
   }
 
